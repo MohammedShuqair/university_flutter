@@ -4,7 +4,7 @@ import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 import 'package:university_app/cache/cache_file/video_cache.dart';
 import 'package:university_app/models/video.dart';
-import 'package:university_app/models/cache/video/video.dart'as cv;
+import 'package:university_app/models/cache/video/video.dart' as cv;
 import 'package:university_app/widgets/video/url_video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -14,47 +14,46 @@ import '../cache/widgets/file_size.dart';
 import '../controllers/home_api_controller.dart';
 import '../controllers/mode.dart';
 import '../theme/my_colors.dart';
-import 'package:path/path.dart'as p;
+import 'package:path/path.dart' as p;
 
 class VideosWidget extends StatefulWidget {
   final VideoModel model;
   final String imagepath;
 
-
-  const VideosWidget(
-      {Key? key,
-      required this.imagepath,
-      required this.model,
-      })
-      : super(key: key);
+  const VideosWidget({
+    Key? key,
+    required this.imagepath,
+    required this.model,
+  }) : super(key: key);
 
   @override
   State<VideosWidget> createState() => _VideosWidgetState();
 }
 
 class _VideosWidgetState extends State<VideosWidget> {
-
   late Future<String?> fileFuture;
   late Future<String?> fileSize;
 
   @override
   void initState() {
     // TODO: implement initState
-    fileFuture = CacheVideo().getFilePath(widget.model.id,p.extension(widget.model.res).toLowerCase());
-    fileSize=HomeApiController().getFileSize(widget.model.res);
+    fileFuture = CacheVideo().getFilePath(
+        widget.model.id, p.extension(widget.model.res).toLowerCase());
+    fileSize = HomeApiController().getFileSize(widget.model.res);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    Color color =context.watch<SettingsModel>().isDark?colorPrimaryD:Colors.white;
+    Color color =
+        context.watch<SettingsModel>().isDark ? colorPrimaryD : Colors.white;
 
     return Directionality(
       textDirection: TextDirection.ltr,
       child: InkWell(
-        onTap: () async{
+        onTap: () async {
           // _launchUrl();
-          String? path=await fileFuture;
+          String? path = await fileFuture;
 
           Uri url = Uri.parse(widget.model.res);
           Navigator.push(
@@ -62,7 +61,7 @@ class _VideosWidgetState extends State<VideosWidget> {
               MaterialPageRoute(
                   builder: (_) => PlayerWidget(
                         url: url.toString(),
-                        name:widget.model.name,
+                        name: widget.model.name,
                         path: path,
                       )));
         },
@@ -71,25 +70,25 @@ class _VideosWidgetState extends State<VideosWidget> {
           height: 175.h,
           child: Container(
             decoration: BoxDecoration(
-              color: color,
+                color: color,
                 border: Border.all(
                   width: 1,
                   color: color,
                 ),
                 borderRadius: BorderRadius.circular(15),
-                boxShadow:  [
+                boxShadow: [
                   BoxShadow(
                     color: Colors.grey.withOpacity(0.4),
                     spreadRadius: 3,
                     blurRadius: 5,
                     offset: const Offset(0, 2), // changes position of shadow
-                  ),                ]
-            ),
+                  ),
+                ]),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Directionality(
-            textDirection:TextDirection.rtl,
+                  textDirection: TextDirection.rtl,
                   child: SizedBox(
                     height: 35,
                     child: Row(
@@ -98,54 +97,44 @@ class _VideosWidgetState extends State<VideosWidget> {
                         DownloadButton(
                           fileFuture: fileFuture,
                           onTapDownload: () async {
-                            final Box<cv.VideoModel>? box =
-                            await context.read<HiveProvider>().openVideoBox();
-                            fileFuture = CacheVideo().addVideoModel(widget.model, box!);
+                            final Box<cv.VideoModel>? box = await context
+                                .read<HiveProvider>()
+                                .openVideoBox();
+                            fileFuture =
+                                CacheVideo().addVideoModel(widget.model, box!);
                             await context.read<HiveProvider>().closeVideoBox();
-                            setState(() {
-
-                            });
+                            setState(() {});
                           },
                         ),
-
-
-                        FileSize(size: widget.model.size,)
+                        FileSize(
+                          size: widget.model.size,
+                        )
                       ],
                     ),
                   ),
                 ),
-
                 Center(
-                  child: Image.asset(widget.imagepath,height:100.h),
+                  child: Image.asset(widget.imagepath, height: 80.h),
                 ),
-                const SizedBox(height: 5,),
+                const SizedBox(
+                  height: 5,
+                ),
                 Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: 10.w,
+                  child: Center(
+                    child: Text(
+                      widget.model.name + "if name is very very  long",
+                      style: TextStyle(
+                        color: const Color(0xff377198),
+                        fontSize: 12.spMin,
+                        fontFamily: 'Droid',
+                        fontWeight: FontWeight.bold,
                       ),
-                      Image.asset(
-                        'images/film.png',
-                      ),
-                      Expanded(
-                        child: Text(
-                          widget.model.name,
-                          style: TextStyle(
-                            color: const Color(0xff377198),
-                            fontSize: 16.sp,
-                            fontFamily: 'Droid',
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 )
-
               ],
             ),
           ),
