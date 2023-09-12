@@ -14,13 +14,14 @@ class CardCodeScreen extends StatelessWidget {
 
   launchWhatsApp() async {
     const link = WhatsAppUnilink(
-      phoneNumber: '+967735090373',
+      phoneNumber: '+967718492367',
       text: "Hey! I want to complete register to the app",
     );
 
     await launch('$link');
   }
-  TextEditingController codeController =TextEditingController();
+
+  TextEditingController codeController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +58,10 @@ class CardCodeScreen extends StatelessWidget {
               ),
               Text(
                 'يرجى ادخال كود البطاقة',
-                style: TextStyle(fontSize: 20.sp, color: Color(0xff2D475F),fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: 20.sp,
+                    color: Color(0xff2D475F),
+                    fontWeight: FontWeight.bold),
               ),
               SizedBox(
                 height: 50.h,
@@ -72,18 +76,20 @@ class CardCodeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 5.h,),
+              SizedBox(
+                height: 5.h,
+              ),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                    onPressed: (){
-                     HomeApiController().chargeUserCard(codeController.text.toString(),context);
-
-                }, child: const Text("تحقق من الكود"),
+                  onPressed: () {
+                    HomeApiController().chargeUserCard(
+                        codeController.text.toString(), context);
+                  },
+                  child: const Text("تحقق من الكود"),
                   style: ElevatedButton.styleFrom(
                     primary: Color(0xff2D475F),
                   ),
-
                 ),
               ),
               SizedBox(
@@ -93,11 +99,11 @@ class CardCodeScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   InkWell(
-                    onTap: (){
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>  DistributionPoints(),
+                          builder: (context) => DistributionPoints(),
                         ),
                       );
                     },
@@ -144,7 +150,7 @@ class CardCodeScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>  CardCategoriesScreen(),
+                          builder: (context) => CardCategoriesScreen(),
                         ),
                       );
                     },
