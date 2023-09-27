@@ -122,7 +122,7 @@ class _VideosWidgetState extends State<VideosWidget> {
                 Expanded(
                   child: Center(
                     child: Text(
-                      widget.model.name + "if name is very very  long",
+                      widget.model.name,
                       style: TextStyle(
                         color: const Color(0xff377198),
                         fontSize: 12.spMin,
