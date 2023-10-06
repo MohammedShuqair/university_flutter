@@ -116,7 +116,15 @@ class _SubjectScreenState extends State<SubjectScreen> {
                               '${_resourceType[index].name} ${_resourceType[index].id}  ');
                           return InkWell(
                               onTap: () {
-                                if (isActiveCard == 'yes') {
+                                if (isActiveCard == 'yes' ||
+                                    _resourceType[index].id == 22) {
+                                  if (_resourceType[index].id == 18) {
+                                    Navigator.push(context,
+                                        MaterialPageRoute(builder: ((context) {
+                                      return SummaryScreen(
+                                          subjectId: widget.subjectId);
+                                    })));
+                                  }
                                   if (_resourceType[index].id == 16) {
                                     Navigator.push(
                                       context,
@@ -142,13 +150,7 @@ class _SubjectScreenState extends State<SubjectScreen> {
                                       return Links(subjectId: widget.subjectId);
                                     })));
                                   }
-                                  if (_resourceType[index].id == 18) {
-                                    Navigator.push(context,
-                                        MaterialPageRoute(builder: ((context) {
-                                      return SummaryScreen(
-                                          subjectId: widget.subjectId);
-                                    })));
-                                  }
+
                                   if (_resourceType[index].id == 19) {
                                     Navigator.push(context,
                                         MaterialPageRoute(builder: ((context) {
@@ -182,6 +184,8 @@ class _SubjectScreenState extends State<SubjectScreen> {
                                 }
                               },
                               child: SubjectWidget(
+                                free: _resourceType[index].id == 22 &&
+                                    isActiveCard != 'yes',
                                 title: _resourceType[index].name,
                                 imagepath:
                                     imagePath ?? 'images/subject/book.png',
