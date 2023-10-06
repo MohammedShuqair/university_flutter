@@ -21,7 +21,7 @@ class _OnBoardingState extends State<OnBoarding> {
 
   @override
   void initState() {
-    pageCount = 7;
+    pageCount = 8;
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent, // set the status bar color
         statusBarBrightness: Brightness.dark, // set the status bar brightness
@@ -34,27 +34,10 @@ class _OnBoardingState extends State<OnBoarding> {
     controller.dispose();
     super.dispose();
   }
-  OnBoardingBody body(int index,bool isPortrait){
+
+  OnBoardingBody body(int index, bool isPortrait) {
     switch (index) {
       case 0:
-        {
-          return OnBoardingBody(
-            text:
-                'يمكنك الاشتراك عن طريق عن طريق الإيداع في حساباتنا الموجودة في الخيارات مع ارفاق السند لخدمة العملاء أو عن طريق الدفع عبر المحافظ الالكترونية ومنها محفظة كاش',
-            imagePath: 'images/onboarding/1.svg',
-            isPortrait: isPortrait,
-          );
-        }
-      case 1:
-        {
-          return OnBoardingBody(
-            text:
-            'كما يمكنك الاشتراك عن طريق شراء كروت تعبئة موجودة لدى نقاط بيعنا القريبة منك وتعبئة كرتك لكي تصل الى محتوى ضخم وثري ومتجدد',
-            imagePath: 'images/onboarding/2.svg',
-            isPortrait: isPortrait,
-          );
-        }
-      case 2:
         {
           return OnBoardingBody(
             text:
@@ -63,7 +46,7 @@ class _OnBoardingState extends State<OnBoarding> {
             isPortrait: isPortrait,
           );
         }
-      case 3:
+      case 1:
         {
           return OnBoardingBody(
             text:
@@ -72,7 +55,7 @@ class _OnBoardingState extends State<OnBoarding> {
             isPortrait: isPortrait,
           );
         }
-      case 4:
+      case 2:
         {
           return OnBoardingBody(
             text:
@@ -81,7 +64,7 @@ class _OnBoardingState extends State<OnBoarding> {
             isPortrait: isPortrait,
           );
         }
-      case 5:
+      case 3:
         {
           return OnBoardingBody(
             text:
@@ -90,24 +73,49 @@ class _OnBoardingState extends State<OnBoarding> {
             isPortrait: isPortrait,
           );
         }
-        case 6:
+      case 4:
+        {
+          return OnBoardingBody(
+              text: 'تمتع باستخدام قائمة الكتب والمراجع بشكل مجاني',
+              imagePath: "images/subject/book.png",
+              svgImage: false,
+              isPortrait: isPortrait);
+        }
+      case 5:
         {
           return OnBoardingBody(
             text:
-                'ماذا تنتظر الآن سجل واشترك',
+                'يمكنك الاشتراك عن طريق عن طريق الإيداع في حساباتنا الموجودة في الخيارات مع ارفاق السند لخدمة العملاء أو عن طريق الدفع عبر المحافظ الالكترونية ومنها محفظة كاش',
+            imagePath: 'images/onboarding/1.svg',
+            isPortrait: isPortrait,
+          );
+        }
+      case 6:
+        {
+          return OnBoardingBody(
+            text:
+                'كما يمكنك الاشتراك عن طريق شراء كروت تعبئة موجودة لدى نقاط بيعنا القريبة منك وتعبئة كرتك لكي تصل الى محتوى ضخم وثري ومتجدد',
+            imagePath: 'images/onboarding/2.svg',
+            isPortrait: isPortrait,
+          );
+        }
+      case 7:
+        {
+          return OnBoardingBody(
+            text: 'ماذا تنتظر الآن سجل واشترك',
             imagePath: 'images/onboarding/7.svg',
             isPortrait: isPortrait,
           );
         }
-
     }
     return OnBoardingBody(
       text:
-      'في حالة عدم فهمك للمحاضرات يمكنك الرجوع للتطبيق ويتجد ضالتك بسهولة دون تشتت او توهان',
+          'في حالة عدم فهمك للمحاضرات يمكنك الرجوع للتطبيق وستجد ضالتك بسهولة دون تشتت او توهان',
       imagePath: 'images/onboarding/6.svg',
       isPortrait: isPortrait,
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -126,7 +134,7 @@ class _OnBoardingState extends State<OnBoarding> {
                       itemCount: pageCount,
                       controller: controller,
                       itemBuilder: (BuildContext context, int index) {
-                       return body(index,isPortrait);
+                        return body(index, isPortrait);
                       },
                     );
                   },
