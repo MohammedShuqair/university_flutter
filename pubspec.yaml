@@ -58,6 +58,7 @@ dependencies:
   video_player: ^2.6.0
   open_file_safe: ^3.2.3
   smooth_page_indicator: ^1.1.0
+  chewie: ^1.5.0
 
 
 dev_dependencies:
