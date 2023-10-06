@@ -64,64 +64,63 @@ class _MajorScreenState extends State<MajorScreen> {
                   return const Center(
                     child: CircularProgressIndicator(),
                   );
-                } else if (snapshot.hasData ) {
+                } else if (snapshot.hasData) {
                   _majorYears = snapshot.data ?? [];
                   return Padding(
                     padding: EdgeInsets.only(left: 10.w, right: 10.w),
                     child: Center(
-                      child:  _majorYears.isNotEmpty?OrientationBuilder(
-                        builder: (BuildContext context, Orientation orientation)
-                        {
-                          bool isPortrait=orientation==Orientation.portrait;
-                          return GridView.builder(
-                                      itemCount: _majorYears.length,
-                                      padding: const EdgeInsets.symmetric(vertical: 20),
-                                      gridDelegate:
-                                          SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: isPortrait?2:4,
-                                        crossAxisSpacing: 15.w,
-                                        mainAxisSpacing: 20.h,
-                                      ),
-                                      itemBuilder:
-                                          (BuildContext context, int index) {
-                                        return InkWell(
-                                            onTap: () => Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        TermScreen(
-                                                      mid: widget.id,
-                                                      yid:
-                                                          _majorYears[index].id,
-                                                    ),
-                                                  ),
-                                                ),
-                                            child: MajorWidget(
-                                                title:
-                                                    _majorYears[index].name));
-                                      },
-                                    );
-                                  }):Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        // crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            'images/nodata.jpg',
-                            height: 250.h,
-                            width: 250.w,
-                          ),
-                          Center(
-                            child: Text(
-                              'سيتم إضافتها قريباً ',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 24,
-                              ),
+                      child: _majorYears.isNotEmpty
+                          ? OrientationBuilder(builder:
+                              (BuildContext context, Orientation orientation) {
+                              bool isPortrait =
+                                  orientation == Orientation.portrait;
+                              return GridView.builder(
+                                itemCount: _majorYears.length - 1,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 20),
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: isPortrait ? 2 : 4,
+                                  crossAxisSpacing: 15.w,
+                                  mainAxisSpacing: 20.h,
+                                ),
+                                itemBuilder: (BuildContext context, int index) {
+                                  return InkWell(
+                                      onTap: () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => TermScreen(
+                                                mid: widget.id,
+                                                yid: _majorYears[index].id,
+                                              ),
+                                            ),
+                                          ),
+                                      child: MajorWidget(
+                                          title: _majorYears[index].name));
+                                },
+                              );
+                            })
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              // crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  'images/nodata.jpg',
+                                  height: 250.h,
+                                  width: 250.w,
+                                ),
+                                Center(
+                                  child: Text(
+                                    'سيتم إضافتها قريباً ',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 24,
+                                    ),
+                                  ),
+                                )
+                              ],
                             ),
-                          )
-                        ],
-                      ),
                     ),
                   );
                 } else {
