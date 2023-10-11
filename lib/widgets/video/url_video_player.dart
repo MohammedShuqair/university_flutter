@@ -8,7 +8,7 @@ class PlayerWidget extends StatefulWidget {
   const PlayerWidget(
       {Key? key, required this.url, required this.name, this.path})
       : super(key: key);
-  final String url;
+  final Uri url;
   final String name;
   final String? path;
 
@@ -23,11 +23,17 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   @override
   void initState() {
     super.initState();
+    print("current uri : ${widget.url}");
     if (widget.path == null) {
-      videoController = VideoPlayerController.network(widget.url);
+      videoController = VideoPlayerController.networkUrl(
+        widget.url,
+      );
     } else {
-      videoController = VideoPlayerController.file(File(widget.path ?? ""));
+      videoController = VideoPlayerController.file(
+        File(widget.path ?? ""),
+      );
     }
+
     videoController.initialize().then((value) {
       setState(() {
         chewieController = ChewieController(

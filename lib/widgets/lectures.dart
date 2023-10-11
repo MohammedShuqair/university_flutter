@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:university_app/cache/controller/hive_provider.dart';
 import 'package:university_app/cache/widgets/file_size.dart';
+import 'package:university_app/controllers/downloads_provider.dart';
 import 'package:university_app/models/lectures.dart';
 
 import '../cache/cache_file/lecture_cache.dart';
@@ -15,7 +18,7 @@ import '../screens/SummaryPDF.dart';
 import 'package:provider/provider.dart';
 
 import '../theme/my_colors.dart';
-import 'package:path/path.dart'as p;
+import 'package:path/path.dart' as p;
 
 import 'downloading_widget.dart';
 
@@ -23,25 +26,30 @@ class LecturesWidget extends StatefulWidget {
   final LecturesModel lectureModel;
   final String imagepath;
 
-
-
-  LecturesWidget({Key? key, required this.imagepath, required this.lectureModel})
-      : super(key: key) {
-  }
+  LecturesWidget(
+      {Key? key, required this.imagepath, required this.lectureModel})
+      : super(key: key) {}
 
   @override
   State<LecturesWidget> createState() => _LecturesWidgetState();
 }
 
 class _LecturesWidgetState extends State<LecturesWidget> {
-  late Future<String?> fileFuture;
+  String? filePath;
+  DownloadStatus status = DownloadStatus.notStarted;
   bool _isFutureExecuting = false;
-
 
   @override
   void initState() {
     // TODO: implement initState
-    fileFuture = CacheLectures().getFilePath(widget.lectureModel.id,p.extension(widget.lectureModel.res).toLowerCase());
+    CacheLectures()
+        .getFilePath(widget.lectureModel.id,
+            p.extension(widget.lectureModel.res).toLowerCase())
+        .then((value) {
+      filePath = value;
+      if (value != null) status = DownloadStatus.done;
+      setState(() {});
+    });
     super.initState();
   }
 
@@ -54,42 +62,46 @@ class _LecturesWidgetState extends State<LecturesWidget> {
   @override
   Widget build(BuildContext context) {
     // print("isCached ${widget.isCached}");
-    Color color =context.watch<SettingsModel>().isDark?colorPrimaryD:Colors.white;
+    Color color =
+        context.watch<SettingsModel>().isDark ? colorPrimaryD : Colors.white;
 
     return InkWell(
       onTap: () async {
-        if(widget.lectureModel.isPdf){
-          String? path = await fileFuture;
+        if (widget.lectureModel.isPdf) {
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => SummaryPDF(
                 res: widget.lectureModel.res,
                 name: widget.lectureModel.name,
-                path: path,
+                path: filePath,
               ),
             ),
           );
-        }else{
+        } else {
           showDialog(
               context: context,
               builder: (_) => WillPopScope(
-                onWillPop: () async {
-                  if (_isFutureExecuting) {
-                    return false;
-                  }
-                  return true;
-                },
-                child:DownloadingWidget(),
-              ));
+                    onWillPop: () async {
+                      if (_isFutureExecuting) {
+                        return false;
+                      }
+                      return true;
+                    },
+                    child: DownloadingWidget(),
+                  ));
           setState(() {
             _isFutureExecuting = true;
           });
-          await viewFile(widget.lectureModel.res,widget.lectureModel.id, context);
+          if (filePath == null) {
+            await viewFile(
+                widget.lectureModel.res, widget.lectureModel.id, context);
+          } else {
+            openFile(filePath!, context);
+          }
           _isFutureExecuting = false;
           Navigator.pop(context);
         }
-
       },
       child: Container(
         padding: EdgeInsets.only(right: 5.w, left: 5.w, bottom: 5.h),
@@ -117,17 +129,50 @@ class _LecturesWidgetState extends State<LecturesWidget> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  DownloadButton(
-                    fileFuture: fileFuture,
-                    onTapDownload: () async {
-                      final Box<cl.LectureModel>? box =
-                      await context.read<HiveProvider>().openLectureBox();
-                      fileFuture = CacheLectures().addLecturesModel(widget.lectureModel, box!);
-                      await context.read<HiveProvider>().closeLectureBox();
-                      setState(() {});
+                  Consumer<DownloadsProvider>(
+                    builder: (context, provider, child) {
+                      return DownloadButton2(
+                        status: status,
+                        id: widget.lectureModel.id,
+                        onTapDownload: () async {
+                          final Box<cl.LectureModel>? box = await context
+                              .read<HiveProvider>()
+                              .openLectureBox();
+                          DownloadModel downloadModel = await CacheLectures()
+                              .addLecturesModel(widget.lectureModel, box!);
+                          if (downloadModel.contentLength != null) {
+                            provider.addDownloadModel(downloadModel);
+                            downloadModel.stream?.listen((List<int> newBytes) {
+                              provider.addCurrentBytes(
+                                  downloadModel.id, newBytes);
+                            }, onDone: () async {
+                              File file = File(downloadModel.path);
+                              await file.writeAsBytes(
+                                  downloadModel.currentBytes ?? []);
+                              filePath = downloadModel.path;
+                              status = DownloadStatus.done;
+                              provider.removeModel(downloadModel.id);
+                            });
+                          } else {
+                            status = DownloadStatus.inProgress;
+                            downloadModel.stream?.listen(
+                                (List<int> newBytes) {}, onDone: () async {
+                              File file = File(downloadModel.path);
+                              await file.writeAsBytes(
+                                  downloadModel.currentBytes ?? []);
+                              filePath = downloadModel.path;
+                              status = DownloadStatus.done;
+                              setState(() {});
+                            });
+                            // fileFuture =
+                            //     CacheBook().addBookModel(widget.bookModel, box!);
+                          }
+                          await context.read<HiveProvider>().closeLectureBox();
+                          setState(() {});
+                        },
+                      );
                     },
                   ),
-
                   FileSize(size: widget.lectureModel.size),
                 ],
               ),

@@ -33,10 +33,10 @@ Future<void> viewFile(String url, int id, BuildContext context) async {
     }
   }
 
-  await _openFile(filePath, context);
+  await openFile(filePath, context);
 }
 
-Future<void> _openFile(String filePath, BuildContext context) async {
+Future<void> openFile(String filePath, BuildContext context) async {
   final result = await OpenFile.open(filePath);
   if (result.type == ResultType.error) {
     ScaffoldMessenger.of(context).showSnackBar(

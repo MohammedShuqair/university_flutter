@@ -55,7 +55,7 @@ class FutureVideoCard extends StatelessWidget {
   final Future<String?> filePath;
   final VoidCallback onTapDelete;
   final String pdfName;
-  final String url;
+  final Uri url;
   final String imgPath;
   final String size;
 

@@ -1,28 +1,31 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:university_app/cache/cache_file/summary_cache.dart';
 import 'package:university_app/cache/controller/hive_provider.dart';
 import 'package:university_app/cache/widgets/download_button.dart';
+import 'package:university_app/controllers/downloads_provider.dart';
 import 'package:university_app/models/summary.dart';
-import 'package:university_app/models/cache/summary/summary.dart'as cs;
+import 'package:university_app/models/cache/summary/summary.dart' as cs;
 import 'package:university_app/widgets/downloading_widget.dart';
 
 import '../cache/widgets/file_size.dart';
 import '../controllers/functions.dart';
-import '../controllers/home_api_controller.dart';
 import '../controllers/mode.dart';
 import '../screens/SummaryPDF.dart';
 import 'package:provider/provider.dart';
 
 import '../theme/my_colors.dart';
-import 'package:path/path.dart'as p;
+import 'package:path/path.dart' as p;
 
 class SummaryWidget extends StatefulWidget {
   final SummaryModel summaryModel;
   final String imagepath;
 
-  const SummaryWidget({Key? key, required this.imagepath, required this.summaryModel})
+  const SummaryWidget(
+      {Key? key, required this.imagepath, required this.summaryModel})
       : super(key: key);
 
   @override
@@ -30,55 +33,67 @@ class SummaryWidget extends StatefulWidget {
 }
 
 class _SummaryWidgetState extends State<SummaryWidget> {
-  late Future<String?> fileFuture;
-  late Future<String?> fileSize;
+  String? filePath;
+  DownloadStatus status = DownloadStatus.notStarted;
+  // late Future<String?> fileSize;
   bool _isFutureExecuting = false;
 
   @override
   void initState() {
     // TODO: implement initState
-    fileFuture=CacheSummary().getFilePath(widget.summaryModel.id,p.extension(widget.summaryModel.res).toLowerCase());
-    fileSize=HomeApiController().getFileSize(widget.summaryModel.res);
+    CacheSummary()
+        .getFilePath(widget.summaryModel.id,
+            p.extension(widget.summaryModel.res).toLowerCase())
+        .then((value) {
+      filePath = value;
+      if (value != null) status = DownloadStatus.done;
+      setState(() {});
+    });
+    // fileSize=HomeApiController().getFileSize(widget.summaryModel.res);
 
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    Color color =context.watch<SettingsModel>().isDark?colorPrimaryD:Colors.white;
+    Color color =
+        context.watch<SettingsModel>().isDark ? colorPrimaryD : Colors.white;
 
     return InkWell(
-      onTap: ()async{
-        if(widget.summaryModel.isPdf){
-          String? path=await fileFuture;
+      onTap: () async {
+        if (widget.summaryModel.isPdf) {
           Navigator.push(
               context,
               MaterialPageRoute(
                   builder: (context) => SummaryPDF(
-                    res: widget.summaryModel.res,
-                    name: widget.summaryModel.name,
-                    path: path,
-                  )));
-        }else{
+                        res: widget.summaryModel.res,
+                        name: widget.summaryModel.name,
+                        path: filePath,
+                      )));
+        } else {
           showDialog(
               context: context,
               builder: (_) => WillPopScope(
-                onWillPop: () async {
-                  if (_isFutureExecuting) {
-                    return false;
-                  }
-                  return true;
-                },
-                child:DownloadingWidget(),
-              ));
+                    onWillPop: () async {
+                      if (_isFutureExecuting) {
+                        return false;
+                      }
+                      return true;
+                    },
+                    child: DownloadingWidget(),
+                  ));
           setState(() {
             _isFutureExecuting = true;
           });
-          await viewFile(widget.summaryModel.res,widget.summaryModel.id ,context);
+          if (filePath == null) {
+            await viewFile(
+                widget.summaryModel.res, widget.summaryModel.id, context);
+          } else {
+            openFile(filePath!, context);
+          }
           _isFutureExecuting = false;
           Navigator.pop(context);
         }
-
       },
       child: Container(
         padding: EdgeInsets.only(top: 10.h),
@@ -109,20 +124,53 @@ class _SummaryWidgetState extends State<SummaryWidget> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  DownloadButton(
-                      fileFuture: fileFuture,
-                      onTapDownload: ()async{
-                        final Box<cs.SummaryModel>? box= await context.read<HiveProvider>().openSummaryBox();
-                        fileFuture= CacheSummary().addSummaryModel(widget.summaryModel,box!);
-                        await  context.read<HiveProvider>().closeSummaryBox();
-                        setState(() {
+                  Consumer<DownloadsProvider>(
+                    builder: (context, provider, child) {
+                      return DownloadButton2(
+                          status: status,
+                          id: widget.summaryModel.id,
+                          onTapDownload: () async {
+                            final Box<cs.SummaryModel>? box = await context
+                                .read<HiveProvider>()
+                                .openSummaryBox();
+                            DownloadModel downloadModel = await CacheSummary()
+                                .addSummaryModel(widget.summaryModel, box!);
 
-                        });
+                            if (downloadModel.contentLength != null) {
+                              provider.addDownloadModel(downloadModel);
+                              downloadModel.stream?.listen(
+                                  (List<int> newBytes) {
+                                provider.addCurrentBytes(
+                                    downloadModel.id, newBytes);
+                              }, onDone: () async {
+                                File file = File(downloadModel.path);
+                                await file.writeAsBytes(
+                                    downloadModel.currentBytes ?? []);
+                                filePath = downloadModel.path;
+                                status = DownloadStatus.done;
+                                provider.removeModel(downloadModel.id);
+                              });
+                            } else {
+                              status = DownloadStatus.inProgress;
+                              downloadModel.stream?.listen(
+                                  (List<int> newBytes) {}, onDone: () async {
+                                File file = File(downloadModel.path);
+                                await file.writeAsBytes(
+                                    downloadModel.currentBytes ?? []);
+                                filePath = downloadModel.path;
+                                status = DownloadStatus.done;
+                                setState(() {});
+                              });
+                            }
 
-                      }
+                            await context
+                                .read<HiveProvider>()
+                                .closeSummaryBox();
+                            setState(() {});
+                          });
+                    },
                   ),
-                   FileSize(size: widget.summaryModel.size),
-
+                  FileSize(size: widget.summaryModel.size),
                 ],
               ),
             ),
@@ -210,6 +258,5 @@ class _SummaryWidgetState extends State<SummaryWidget> {
 //     ),
 //   ),
 // );
-
   }
 }

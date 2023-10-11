@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 import 'package:university_app/cache/cache_file/video_cache.dart';
+import 'package:university_app/controllers/downloads_provider.dart';
 import 'package:university_app/models/video.dart';
 import 'package:university_app/models/cache/video/video.dart' as cv;
 import 'package:university_app/widgets/video/url_video_player.dart';
@@ -31,15 +34,23 @@ class VideosWidget extends StatefulWidget {
 }
 
 class _VideosWidgetState extends State<VideosWidget> {
-  late Future<String?> fileFuture;
-  late Future<String?> fileSize;
+  String? filePath;
+  DownloadStatus status = DownloadStatus.notStarted;
+  // late Future<String?> fileSize;
 
   @override
   void initState() {
+    print(widget.model.res);
     // TODO: implement initState
-    fileFuture = CacheVideo().getFilePath(
-        widget.model.id, p.extension(widget.model.res).toLowerCase());
-    fileSize = HomeApiController().getFileSize(widget.model.res);
+    CacheVideo()
+        .getFilePath(
+            widget.model.id, p.extension(widget.model.res).toLowerCase())
+        .then((value) {
+      filePath = value;
+      if (value != null) status = DownloadStatus.done;
+      setState(() {});
+    });
+    // fileSize = HomeApiController().getFileSize(widget.model.res);
     super.initState();
   }
 
@@ -53,16 +64,15 @@ class _VideosWidgetState extends State<VideosWidget> {
       child: InkWell(
         onTap: () async {
           // _launchUrl();
-          String? path = await fileFuture;
 
           Uri url = Uri.parse(widget.model.res);
           Navigator.push(
               context,
               MaterialPageRoute(
                   builder: (_) => PlayerWidget(
-                        url: url.toString(),
+                        url: url,
                         name: widget.model.name,
-                        path: path,
+                        path: filePath,
                       )));
         },
         child: SizedBox(
@@ -94,16 +104,50 @@ class _VideosWidgetState extends State<VideosWidget> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        DownloadButton(
-                          fileFuture: fileFuture,
-                          onTapDownload: () async {
-                            final Box<cv.VideoModel>? box = await context
-                                .read<HiveProvider>()
-                                .openVideoBox();
-                            fileFuture =
-                                CacheVideo().addVideoModel(widget.model, box!);
-                            await context.read<HiveProvider>().closeVideoBox();
-                            setState(() {});
+                        Consumer<DownloadsProvider>(
+                          builder: (context, provider, child) {
+                            return DownloadButton2(
+                              status: status,
+                              id: widget.model.id,
+                              onTapDownload: () async {
+                                final Box<cv.VideoModel>? box = await context
+                                    .read<HiveProvider>()
+                                    .openVideoBox();
+                                DownloadModel downloadModel = await CacheVideo()
+                                    .addVideoModel(widget.model, box!);
+                                if (downloadModel.contentLength != null) {
+                                  provider.addDownloadModel(downloadModel);
+                                  downloadModel.stream?.listen(
+                                      (List<int> newBytes) {
+                                    provider.addCurrentBytes(
+                                        downloadModel.id, newBytes);
+                                  }, onDone: () async {
+                                    File file = File(downloadModel.path);
+                                    await file.writeAsBytes(
+                                        downloadModel.currentBytes ?? []);
+                                    filePath = downloadModel.path;
+                                    status = DownloadStatus.done;
+                                    provider.removeModel(downloadModel.id);
+                                  });
+                                } else {
+                                  status = DownloadStatus.inProgress;
+                                  downloadModel.stream
+                                      ?.listen((List<int> newBytes) {},
+                                          onDone: () async {
+                                    File file = File(downloadModel.path);
+                                    await file.writeAsBytes(
+                                        downloadModel.currentBytes ?? []);
+                                    filePath = downloadModel.path;
+                                    status = DownloadStatus.done;
+                                    setState(() {});
+                                  });
+                                }
+                                await context
+                                    .read<HiveProvider>()
+                                    .closeVideoBox();
+                                setState(() {});
+                              },
+                            );
                           },
                         ),
                         FileSize(

@@ -9,7 +9,7 @@ import '../../../widgets/no_cache.dart';
 import '../../cache_file/video_cache.dart';
 import '../../controller/hive_provider.dart';
 import '../future_pdf_card.dart';
-import 'package:path/path.dart'as p;
+import 'package:path/path.dart' as p;
 
 class VideoList extends StatefulWidget {
   const VideoList({Key? key}) : super(key: key);
@@ -45,13 +45,14 @@ class _VideoListState extends State<VideoList> {
                               String url = books[index].res;
                               String pdfName = books[index].name;
                               return FutureVideoCard(
-                                filePath:
-                                    CacheVideo().getFilePath(books[index].id,p.extension(url).toLowerCase()),
+                                filePath: CacheVideo().getFilePath(
+                                    books[index].id,
+                                    p.extension(url).toLowerCase()),
                                 onTapDelete: () async {
                                   await CacheVideo()
                                       .deleteVideoModel(books[index]);
                                 },
-                                url: url,
+                                url: Uri.parse(url),
                                 pdfName: pdfName,
                                 imgPath: 'images/pdf.png',
                                 size: books[index].size,

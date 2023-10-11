@@ -68,7 +68,7 @@ class _OnBoardingState extends State<OnBoarding> {
         {
           return OnBoardingBody(
             text:
-                'في حالة عدم فهمك للمحاضرات يمكنك الرجوع للتطبيق ويتجد ضالتك بسهولة دون تشتت او توهان',
+                'في حالة عدم فهمك للمحاضرات يمكنك الرجوع للتطبيق وستجد ضالتك بسهولة دون تشتت او توهان',
             imagePath: 'images/onboarding/6.svg',
             isPortrait: isPortrait,
           );
